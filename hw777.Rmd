@@ -1,0 +1,134 @@
+---
+title: "hw77"
+output: html_document
+---
+#8.6_a
+#y=1.13736x-0.11840x^2+21.09416
+#R^2 is 0.8143, this quadratic regression model is a good fit.
+```{r }
+st<-read.table("CH08PR06.txt")
+names(st)<-c("steroid","age")
+meanage<-mean(st$age)
+centerage<-st$age-meanage
+fit.st<-lm(steroid ~ centerage+ I(centerage^2),data=st)
+summary(fit.st)
+plot(st$age,st$steroid,xlab="age",ylab="steroid")
+x1=seq(-20, 25, by=.1)
+y1<- 1.13736*x1-0.11840*x1^2+21.09416
+lines(sort(st$ag),fitted(fit.st)[order(st$age)],col='blue')
+```
+
+##8.6_b
+##H0:beta1=beta2=0 H1:at least one of beta1 and beta2 does not equal to zero
+#Decision rule:alpha=0.01,we reject H0 if F.star>F(1-alpha,2,24)
+#becasue F.star=52.63 from summary(fit.st), which is bigger than F(0.99,2,24)=5.6136, we reject H0. We conclude that at least one of beta1 and beta2 does not equal to zero. There is a regression relation.
+
+```{r}
+qf(0.99,2,24)
+```
+
+
+##8.6_c
+## The average level of steroid at age 10 will simutenously fall in (7.56,13.58), at age 15 will fall in(17.23,23.05),at age 20 will fall in (20.99,26.58).
+
+```{r pressure, echo=FALSE}
+datax<-data.frame(centerage=c(10-meanage,15-meanage,20-meanage))
+predict(fit.st,datax,interval="confidence",level=1-0.01/3)
+```
+
+##8.6_d
+#the average level of steroid will fall between(10.97,29.30) at age 15
+```{r}
+datax2<- data.frame(centerage = c(15-meanage))
+predict(fit.st, newdata = datax2, interval = "prediction",level = 0.99)
+```
+
+
+##8.6_e
+##H0:=0 H1:abeta2!=0
+#Decision rule:alpha=0.01,we reject H0 if F.star>F(1-alpha,1,24)
+#becasue F.star=25.54 from anova, which is bigger than F=7.833871, we reject H0. We conclude beta2 does not equal to 0. And quadratic term cannot be dropped.
+```{r}
+anova(fit.st)
+qf(0.99,1,24)
+```
+
+
+
+#8.7_f
+#y=-26.3254+4.87357*x-0.11840*x^2
+
+```{r}
+fit.st2<-lm(st$steroid~st$age+I(st$age^2))
+summary(fit.st2)
+```
+
+##8.21_a
+##For hard hat type:
+## E(Y)=(beat0+beta2)+beta1*x1
+##for bump hat type
+## E(Y)=(beta0+beta3)+beat1*x1
+##for none type
+## E(Y)=beta0+beat1*x1
+##8.21_b
+##(1)H0:beta3=0 H1:beta3!=0
+##(2)H0:beta2=beta3   H1:beta2!=beta3
+
+
+
+#8.23
+#I do not agree with the statement.Summer does not have an indicator variable. The coefficients for the indicator variables are relative to summer. The result means the effect of winter is not significantly different from the effect of summer. While the other seasons have effect that is different from summer.
+
+#8.34_a
+#y=beat0+beta2*x1+beta2*x2+beta3*x3
+#8.34_b
+#commercil: y=(beta0+beta2)+beta1*x1, mutual savings:y=(beta0+beta3)+beta1*x1, savings and loan y=(beta0-beta2-beta3)+beta1*x1
+#8.34_c
+#beta2:the adjudgment of profit or loss for the commercial bank
+#beta3:the adjudgment of profit or loss for the mutual savings bank
+#-beta2-beta3:the adjudgment of profit or loss for the saving and loan bank
+
+#8.39
+#y=-2.075e+02+5.515e-04*x1+1.070e-01*x2+1.490e+02*x3+ 1.455e+02*x4+  1.912e+02*x5
+
+```{r cars}
+CDIall <- read.table("APPENC02.txt")
+names(CDIall) <- c("ID", "County", "State", "Area", "TotPop", "PercYoung", "PercOld",
+                   "Physicians", "HospitalBeds", "Crimes", "PercHS", "PercBSc", "PercPoverty",
+                   "PercUnemployed", "IncomePerCapita", "IncomePersonal", "Region")
+x3<-CDIall[,17]
+x4<-CDIall[,17]
+x5<-CDIall[,17]
+for(i in 1:440){if(CDIall$Region[i]==1){x3[i]<-1} else {x3[i]<-0}}
+for(i in 1:440){if(CDIall$Region[i]==2){x4[i]<-1} else {x4[i]<-0}}
+for(i in 1:440){if(CDIall$Region[i]==3){x5[i]<-1} else {x5[i]<-0}}
+CDI2<-data.frame(CDIall,x3,x4,x5)
+fit.cdi<-lm(Physicians~TotPop + IncomePersonal+x3+x4+x5,data=CDI2)
+summary(fit.cdi)
+
+```
+##8.39_b
+#H0:beta3=beta4 H1:beta3!=beta4
+#since F.star(=0.9647)<F(=0.002),we cannot reject H0. We conclude that beta3=beta4
+```{r}
+CDI2$x6<-CDI2$x3+CDI2$x4
+reducemodel<-lm(Physicians~TotPop+IncomePersonal+x5+x6,data=CDI2)
+anova(reducemodel,fit.cdi)
+qf(0.9,1,434)
+
+
+```
+
+
+#8.39_c
+#H0=beta3=beta4=beta5=0 H1:not all of beta3 and beta4 and beta5 equal to zero.
+#Because F.star(=1.948698)<F(=3.82),we cannot reject H0. we conclude that H0=beta3=beta4=beta5=0
+#the p-value is 0.155
+```{r}
+anova(fit.cdi)
+fit.cdi2<-lm(Physicians~TotPop+IncomePersonal,data=CDIall)
+anova(fit.cdi2)
+((140967081-139093455)/3)/320492 
+qf(0.99,3,434)
+df(1.948698,3,434)
+```
